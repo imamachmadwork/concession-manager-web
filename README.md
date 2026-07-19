@@ -5,10 +5,11 @@ from [playwright-python-template](https://github.com/imamachmadwork/playwright-p
 Page Object Model, an API client, Allure reporting, per-team bug reports,
 known-bug regression tracking, and a ready-to-go CI workflow.
 
-The example suite ships with a placeholder `HomePage` test pointed at
-`https://concessions.roamstay.com` and a backend example pointed at
-`https://jsonplaceholder.typicode.com` — replace both with real page objects
-and API tests once the app's actual pages/endpoints are mapped out.
+`pages/sign_in_page.py` and `tests/e2e/test_sign_in_page.py` cover the app's
+real landing route (a sign-in screen) against `https://concessions.roamstay.com`.
+The backend example (`clients/api_client.py`, `tests/api/test_example_api.py`)
+still points at the template's `https://jsonplaceholder.typicode.com` stand-in —
+swap it for the app's real API once its base URL and endpoints are known.
 
 ## Quickstart
 
@@ -71,10 +72,10 @@ tests the same way under `tests/api/`, using the `api_client` fixture from
 
 ## Next steps
 
-1. **Replace the example page/test** — `pages/home_page.py` and
-   `tests/e2e/test_home_page.py` are stand-ins; swap in the app's real
-   landing page once mapped out. Same for `clients/api_client.py`'s default
-   URL and `tests/api/test_example_api.py`.
+1. **Replace the API example** — `clients/api_client.py`'s default URL and
+   `tests/api/test_example_api.py` still point at the template's
+   JSONPlaceholder stand-in; swap in the app's real API base URL and
+   endpoints once known.
 2. **Wire up authentication, if needed** — `credentials.py` holds one entry
    per account/org, read from env vars. `tests/e2e/conftest.py` and
    `tests/api/conftest.py` each have a commented-out

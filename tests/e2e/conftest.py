@@ -2,10 +2,10 @@ import pytest
 
 
 @pytest.fixture
-def home_page(page):
-    from pages.home_page import HomePage
+def sign_in_page(page):
+    from pages.sign_in_page import SignInPage
 
-    return HomePage(page)
+    return SignInPage(page)
 
 
 # --- Authenticated-session pattern (example — adapt or delete) -------------
