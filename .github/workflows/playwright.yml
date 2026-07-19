@@ -1,0 +1,135 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run tests
+        env:
+          PYTEST_BASE_URL: ${{ vars.PYTEST_BASE_URL }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          DEFAULT_EMAIL: ${{ secrets.DEFAULT_EMAIL }}
+          DEFAULT_PASSWORD: ${{ secrets.DEFAULT_PASSWORD }}
+        run: uv run pytest -m "not known_bug"
+
+      - name: Generate per-team bug reports
+        if: always()
+        run: uv run python scripts/generate_bug_report.py
+
+      - name: Install Allure commandline
+        if: always()
+        run: npm install -g allure-commandline
+
+      - name: Generate Allure HTML report
+        if: always()
+        run: allure generate allure-results --clean --output allure-report
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: test-results/
+          retention-days: 7
+
+      - name: Upload bug reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bug-reports
+          path: reports/bug-reports/
+          retention-days: 7
+
+      - name: Upload Allure HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 7
+
+  # Regression tests for tracked, pre-existing product bugs (pytest.mark.known_bug -
+  # see pyproject.toml). They assert the *correct* behavior, so they fail until the
+  # underlying bug is fixed upstream, and will start passing on their own once it is.
+  # Split into its own job (continue-on-error, doesn't block the `test` check) so a
+  # known issue doesn't turn every PR red; it's still tracked via its own Allure
+  # report and bug-report artifacts. Runs after `test` (not in parallel) to avoid
+  # doubling up on rate-limited endpoints (e.g. sign-in) within the same run.
+  known-bugs:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run known-bug regression tests
+        env:
+          PYTEST_BASE_URL: ${{ vars.PYTEST_BASE_URL }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          DEFAULT_EMAIL: ${{ secrets.DEFAULT_EMAIL }}
+          DEFAULT_PASSWORD: ${{ secrets.DEFAULT_PASSWORD }}
+        run: uv run pytest -m known_bug
+
+      - name: Generate per-team bug reports
+        if: always()
+        run: uv run python scripts/generate_bug_report.py
+
+      - name: Install Allure commandline
+        if: always()
+        run: npm install -g allure-commandline
+
+      - name: Generate Allure HTML report
+        if: always()
+        run: allure generate allure-results --clean --output allure-report
+
+      - name: Upload known-bug Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: known-bugs-allure-report
+          path: allure-report/
+          retention-days: 7
+
+      - name: Upload known-bug reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: known-bugs-report
+          path: reports/bug-reports/
+          retention-days: 7
