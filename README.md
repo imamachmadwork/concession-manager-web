@@ -61,6 +61,7 @@ clients/         # API client wrappers (httpx), used by tests/api
 tests/e2e/       # Frontend/UI test specs (Playwright)
 tests/api/       # Backend/API test specs (httpx)
 scripts/         # generate_bug_report.py — per-team markdown bug reports
+docs/            # qa-id-convention.md — locator/QA-ID naming convention
 conftest.py      # Shared fixtures + auto-tagging of Allure epic/feature labels
 credentials.py   # Per-account/org credentials, read from env vars
 ```
@@ -69,6 +70,16 @@ Add new pages under `pages/`, wire them up as fixtures in
 `tests/e2e/conftest.py`, and write specs under `tests/e2e/`. Add new API
 tests the same way under `tests/api/`, using the `api_client` fixture from
 `tests/api/conftest.py`.
+
+## Locator strategy (QA IDs)
+
+The frontend has no `data-testid`/`data-qa-id` hooks yet, so page objects
+locate elements via `BasePage.get_by_qa_id(qa_id, fallback=...)`: it matches
+either attribute if present, and falls back to a CSS/role locator otherwise.
+Once the frontend adds either attribute, the same test code picks it up
+automatically. See [docs/qa-id-convention.md](docs/qa-id-convention.md) for
+the naming convention, the proposed IDs to hand off to the frontend team,
+and how to roll this out to new pages.
 
 ## Next steps
 
