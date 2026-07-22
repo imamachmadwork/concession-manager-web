@@ -20,5 +20,5 @@ class ApiClient(httpx.Client):
     """
 
     def __init__(self, **kwargs):
-        base_url = os.environ.get("API_BASE_URL") or "https://concessions.roamstay.com"
+        base_url = os.environ.get("API_BASE_URL") or "https://jsonplaceholder.typicode.com"
         super().__init__(base_url=base_url, timeout=15.0, **kwargs)
